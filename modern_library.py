@@ -1,6 +1,7 @@
+import json
 import os
 
-DATA_FILE = "lib_data.txt"
+DATA_FILE = "books.json"
 
 
 def load_books():
@@ -9,34 +10,41 @@ def load_books():
     if not os.path.exists(DATA_FILE):
         return books
 
-    f = open(DATA_FILE, "r", encoding="utf-8")
-    lines = f.readlines()
-    f.close()
+    try:
+        f = open(DATA_FILE, "r", encoding="utf-8")
+        books = json.load(f)
+        f.close()
+    except json.JSONDecodeError:
+        print("JSON Format Error")
+        return []
+    except OSError:
+        return []
 
-    for line in lines:
-        parts = line.strip().split("@@")
-        if len(parts) != 2:
+    if not isinstance(books, list):
+        print("JSON Format Error")
+        return []
+
+    valid_books = []
+    for book in books:
+        if not isinstance(book, dict):
             continue
 
-        book_data = parts[1].split("##")
-        if len(book_data) != 2:
+        if "title" not in book or "isbn" not in book or "status" not in book:
             continue
 
-        books.append({
-            "title": parts[0],
-            "isbn": book_data[0],
-            "status": book_data[1],
+        valid_books.append({
+            "title": book["title"],
+            "isbn": book["isbn"],
+            "status": book["status"],
         })
 
-    return books
+    return valid_books
+
 
 
 def save_books(books):
     f = open(DATA_FILE, "w", encoding="utf-8")
-
-    for book in books:
-        f.write(f"{book['title']}@@{book['isbn']}##{book['status']}\n")
-
+    json.dump(books, f, ensure_ascii=False, indent=2)
     f.close()
 
 
@@ -59,9 +67,17 @@ def add_book(books, command_text):
         print("Format Error")
         return
 
-    title = book_data[0]
-    isbn = book_data[1]
-    status = book_data[2]
+    title = book_data[0].strip()
+    isbn = book_data[1].strip()
+    status = book_data[2].strip()
+
+    if title == "" or isbn == "" or status == "":
+        print("Format Error")
+        return
+
+    if status not in ["available", "borrowed"]:
+        print("Format Error")
+        return
 
     if isbn_exists(books, isbn):
         print("ISBN Exist")
@@ -77,6 +93,8 @@ def borrow_book(books, isbn):
             book["status"] = "borrowed"
             print("Updated")
             return
+
+    print("Book Not Found")
 
 
 def main():
