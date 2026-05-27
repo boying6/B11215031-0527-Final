@@ -53,11 +53,16 @@ Prompt C：
 
 ### 2.2 AI 錯誤處理
 
-1. AI 在撰寫過程中是否有出錯？（例如：漏寫了某個功能、語法錯誤）你是如何發現並請它修正的？
+1. AI 在撰寫過程中有出錯，主要是前幾次版本還停留在舊的 `lib_data.txt` 與 `@@`、`##` 儲存方式，沒有完全切換成 `books.json`。另外，`borrow` 功能一開始也沒有在找不到 ISBN 時印出 `Book Not Found`。
 
-2. 發現的問題： (範例：AI 漏掉了 exit 時要印出分類統計的功能)
+2. 發現的問題：
+   - 儲存格式還是舊的文字檔格式，和題目要求不一致。
+   - `borrow` 找不到對應 ISBN 時沒有提示，使用者不知道是否操作成功。
+   - 後來再補強時，`load_books()` 對 JSON 格式錯誤的處理還不夠明確。
 
-3. 修正的對話： (範例：我告訴它「請在結束前迴圈遍歷 JSON 資料並計算分類總額」)
+3. 修正的對話：
+   - 我告訴它「請繼續重構 modern_library.py，把原本使用 lib_data.txt 與 @@、## 分隔的儲存方式，改成使用 books.json 儲存資料。」
+   - 接著我補充「請加強 modern_library.py 的錯誤處理與輸入驗證，讀取 books.json 時若檔案不存在就回傳空清單；若 JSON 格式錯誤要提示並回傳空清單；borrow 找不到 ISBN 要印出 Book Not Found。」
 
 ---
 
@@ -70,7 +75,24 @@ Prompt C：
 請貼上執行程式並輸入 show 後，顯示資料清單。(請從呼叫執行程式到結束程式完整的把操作對話複製到下框)
 
 ```log
-
+PS C:\Users\pclab\Desktop\B11215031_李柏穎\NTUST-0527-Final-master> python modern_library.py
+=== 圖書管理系統 v0.1 (Modern) ===
+> add 深入淺出Python/978001/available
+Success
+> add 資料結構理論/978002/available
+Success
+> add 演算法實作/978003/available
+Success
+> add 重複測試書/978001/available
+ISBN Exist
+> borrow 978002
+Updated
+> show      
+書名: 深入淺出Python, ISBN: 978001, 狀態: available
+書名: 資料結構理論, ISBN: 978002, 狀態: borrowed
+書名: 演算法實作, ISBN: 978003, 狀態: available
+> exit
+系統關閉
 ```
 
 ### 3.2 產出的資料檔案格式
@@ -80,9 +102,19 @@ Prompt C：
 ```json
 [
   {
-    "title": "XXX",
-    "isbn": "XXX",
-    "status": "XXX"
+    "title": "深入淺出Python",
+    "isbn": "978001",
+    "status": "available"
+  },
+  {
+    "title": "資料結構理論",
+    "isbn": "978002",
+    "status": "borrowed"
+  },
+  {
+    "title": "演算法實作",
+    "isbn": "978003",
+    "status": "available"
   }
 ]
 ```
